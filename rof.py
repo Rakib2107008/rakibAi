@@ -146,3 +146,63 @@ heuristic = [3, 2, 2, 0]  # Example heuristic values to goal D
 
 path = astar_graph_list(graph_list, heuristic, start=0, goal=3, greedy=False)
 print("Path:", path)
+import heapq
+
+def manhattan_distance(pos1, pos2):
+    """Compute Manhattan distance between two positions (x, y)."""
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+def astar_graph_list(graph, positions, start, goal, greedy=False):
+    """
+    graph: list of lists, graph[i] = list of neighbors of node i
+    positions: list of tuples, positions[i] = (x, y) coordinates of node i
+    start, goal: integer indices of start and goal nodes
+    greedy: if True, perform greedy best-first search
+    """
+    pq = []
+    heuristic_start = manhattan_distance(positions[start], positions[goal])
+    heapq.heappush(pq, (heuristic_start, 0, start, None))
+    visited = {}  # node -> parent
+
+    while pq:
+        f, g, node, parent = heapq.heappop(pq)
+
+        if node in visited:
+            continue
+
+        visited[node] = parent
+
+        if node == goal:
+            path = []
+            cur = goal
+            while cur is not None:
+                path.append(cur)
+                cur = visited[cur]
+            return path[::-1]
+
+        for neigh in graph[node]:  # unweighted graph
+            ng = g + 1  # COST per edge
+            h = manhattan_distance(positions[neigh], positions[goal])
+            nf = h if greedy else ng + h
+            heapq.heappush(pq, (nf, ng, neigh, node))
+
+    return None
+
+# Example usage with coordinates:
+# Node 0 = A(0,0), 1 = B(1,0), 2 = C(0,1), 3 = D(1,1)
+graph_list = [
+    [1, 2],  # A -> B, C
+    [3],     # B -> D
+    [3],     # C -> D
+    []       # D
+]
+
+positions = [
+    (0, 0),  # A
+    (1, 0),  # B
+    (0, 1),  # C
+    (1, 1)   # D
+]
+
+path = astar_graph_list(graph_list, positions, start=0, goal=3, greedy=False)
+print("Path:", path)
