@@ -96,3 +96,53 @@ a = "aaaaabbbccc"
 my_counter = Counter(a)
 print(my_counter.values())
 print(my_counter.most_common(1)[0][1])
+import heapq
+
+def astar_graph_list(graph, heuristic, start, goal, greedy=False):
+    """
+    graph: list of lists, graph[i] = list of neighbors of node i
+    heuristic: list, heuristic[i] = estimated cost from node i to goal
+    start, goal: integer indices of start and goal nodes
+    greedy: if True, perform greedy best-first search
+    """
+    pq = []
+    heapq.heappush(pq, (heuristic[start], 0, start, None))
+    visited = {}  # node -> parent
+
+    while pq:
+        f, g, node, parent = heapq.heappop(pq)
+
+        if node in visited:
+            continue
+
+        visited[node] = parent
+
+        if node == goal:
+            path = []
+            cur = goal
+            while cur is not None:
+                path.append(cur)
+                cur = visited[cur]
+            return path[::-1]
+
+        for neigh in graph[node]:  # unweighted graph
+            ng = g + 1  # COST per edge
+            nf = heuristic[neigh] if greedy else ng + heuristic[neigh]
+            heapq.heappush(pq, (nf, ng, neigh, node))
+
+    return None
+
+
+# Example usage with nested lists:
+# Node 0 = A, 1 = B, 2 = C, 3 = D
+graph_list = [
+    [1, 2],  # A -> B, C
+    [3],     # B -> D
+    [3],     # C -> D
+    []       # D
+]
+
+heuristic = [3, 2, 2, 0]  # Example heuristic values to goal D
+
+path = astar_graph_list(graph_list, heuristic, start=0, goal=3, greedy=False)
+print("Path:", path)
